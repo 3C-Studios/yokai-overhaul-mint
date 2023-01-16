@@ -29,20 +29,6 @@ import {
   SetupState,
 } from "./candy-machine";
 
-import {
-  CMT_PROGRAM,
-  createDynamicRoyaltyStruct,
-  createInitAccountInstruction,
-  createInitPolicyInstruction,
-  createMintToInstruction as ocpCreateMintToInstruction,
-  createWrapInstruction,
-  findFreezeAuthorityPk,
-  findMintStatePk,
-  findPolicyPk,
-  LARGER_COMPUTE_UNIT,
-  process_tx,
-} from "@magiceden-oss/open_creator_protocol";
-
 const cluster = process.env.REACT_APP_SOLANA_NETWORK!.toString();
 const decimals = process.env.REACT_APP_SPL_TOKEN_TO_MINT_DECIMALS
   ? +process.env.REACT_APP_SPL_TOKEN_TO_MINT_DECIMALS!.toString()
@@ -105,8 +91,11 @@ const NFT = styled(Paper)`
   margin: 0 auto;
   padding: 5px 20px 20px 20px;
   flex: 1 1 auto;
-  background-color: var(--card-background-color) !important;
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22) !important;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    linear-gradient(115.31deg, #cd443a 6.42%, rgba(0, 0, 0, 0) 82.56%),
+    rgba(61, 49, 39, 0.26);
+  backdrop-filter: blur(3.5px);
 `;
 
 const Card = styled(Paper)`

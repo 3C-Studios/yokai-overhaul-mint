@@ -88,7 +88,7 @@ const ConnectButton = styled(WalletMultiButton)`
 `;
 
 const NFT = styled(Paper)`
-  min-width: 500px;
+  min-width: min(500px, 80vw);
   margin: 0 auto;
   padding: 5px 20px 20px 20px;
   flex: 1 1 auto;
@@ -191,6 +191,7 @@ const Image = styled.img`
   width: auto;
   border-radius: 7px;
   box-shadow: 5px 5px 40px 5px rgba(0, 0, 0, 0.5);
+  max-height: 60vmin;
 `;
 
 const BorderLinearProgress = styled(LinearProgress)`

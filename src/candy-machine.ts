@@ -1,15 +1,9 @@
 import * as anchor from "@project-serum/anchor";
-import {
-  MintLayout,
-  TOKEN_PROGRAM_ID,
-  Token,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+import { MintLayout, TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import {
   SystemProgram,
   Transaction,
   SYSVAR_SLOT_HASHES_PUBKEY,
-  SYSVAR_INSTRUCTIONS_PUBKEY,
   PublicKey,
 } from "@solana/web3.js";
 import { sendTransactions, SequenceType } from "./connection";
@@ -22,15 +16,15 @@ import {
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
 } from "./utils";
 
-import {
-  CMT_PROGRAM,
-  createInitAccountInstruction,
-  createMintToInstruction as ocpCreateMintToInstruction,
-  createWrapInstruction,
-  findFreezeAuthorityPk,
-  findMintStatePk,
-} from "@magiceden-oss/open_creator_protocol";
-import { findMetadataPda } from "@metaplex-foundation/js";
+// import {
+//   CMT_PROGRAM,
+//   createInitAccountInstruction,
+//   createMintToInstruction as ocpCreateMintToInstruction,
+//   createWrapInstruction,
+//   findFreezeAuthorityPk,
+//   findMintStatePk,
+// } from "@magiceden-oss/open_creator_protocol";
+// import { findMetadataPda } from "@metaplex-foundation/js";
 
 export const CANDY_MACHINE_PROGRAM = new anchor.web3.PublicKey(
   "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
@@ -385,6 +379,7 @@ export const mintOneToken = async (
   const instructions = [];
   const signers: anchor.web3.Keypair[] = [];
   console.log("SetupState: ", setupState);
+
   if (!setupState) {
     signers.push(mint);
     instructions.push(
@@ -420,44 +415,6 @@ export const mintOneToken = async (
           [],
           1
         ),
-
-        // OSS instructions
-        // createWrapInstruction({
-        //   mint: mint.publicKey,
-        //   policy: POLICY,
-        //   freezeAuthority: payer,
-        //   mintAuthority: payer,
-        //   mintState: findMintStatePk(mint.publicKey),
-        //   from: payer,
-        //   instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-        //   cmtProgram: CMT_PROGRAM,
-        //   metadata: findMetadataPda(mint.publicKey),
-        // }),
-        // createInitAccountInstruction({
-        //   policy: POLICY,
-        //   freezeAuthority: findFreezeAuthorityPk(POLICY),
-        //   mint: mint.publicKey,
-        //   metadata: findMetadataPda(mint.publicKey),
-        //   mintState: findMintStatePk(mint.publicKey),
-        //   from: payer,
-        //   fromAccount: userTokenAccountAddress,
-        //   associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        //   instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-        //   cmtProgram: CMT_PROGRAM,
-        //   payer: payer,
-        // }),
-        // ocpCreateMintToInstruction({
-        //   policy: POLICY,
-        //   freezeAuthority: findFreezeAuthorityPk(POLICY),
-        //   mint: mint.publicKey,
-        //   metadata: findMetadataPda(mint.publicKey),
-        //   mintState: findMintStatePk(mint.publicKey),
-        //   from: payer,
-        //   fromAccount: userTokenAccountAddress,
-        //   instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-        //   cmtProgram: CMT_PROGRAM,
-        //   payer: payer,
-        // }),
       ]
     );
   }
@@ -491,6 +448,7 @@ export const mintOneToken = async (
       });
     }
   }
+
   if (candyMachine.state.whitelistMintSettings) {
     const mint = new anchor.web3.PublicKey(
       candyMachine.state.whitelistMintSettings.mint
@@ -537,6 +495,7 @@ export const mintOneToken = async (
   );
 
   console.log(remainingAccounts.map((rm) => rm.pubkey.toBase58()));
+
   instructions.push(
     await candyMachine.program.instruction.mintNft(creatorBump, {
       accounts: {
@@ -561,46 +520,6 @@ export const mintOneToken = async (
         remainingAccounts.length > 0 ? remainingAccounts : undefined,
     })
   );
-
-  instructions.push([
-    // OSS instructions
-    createWrapInstruction({
-      mint: mint.publicKey,
-      policy: POLICY,
-      freezeAuthority: payer,
-      mintAuthority: payer,
-      mintState: findMintStatePk(mint.publicKey),
-      from: payer,
-      instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-      cmtProgram: CMT_PROGRAM,
-      metadata: findMetadataPda(mint.publicKey),
-    }),
-    createInitAccountInstruction({
-      policy: POLICY,
-      freezeAuthority: findFreezeAuthorityPk(POLICY),
-      mint: mint.publicKey,
-      metadata: findMetadataPda(mint.publicKey),
-      mintState: findMintStatePk(mint.publicKey),
-      from: payer,
-      fromAccount: userTokenAccountAddress,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-      cmtProgram: CMT_PROGRAM,
-      payer: payer,
-    }),
-    ocpCreateMintToInstruction({
-      policy: POLICY,
-      freezeAuthority: findFreezeAuthorityPk(POLICY),
-      mint: mint.publicKey,
-      metadata: findMetadataPda(mint.publicKey),
-      mintState: findMintStatePk(mint.publicKey),
-      from: payer,
-      fromAccount: userTokenAccountAddress,
-      instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-      cmtProgram: CMT_PROGRAM,
-      payer: payer,
-    }),
-  ]);
 
   const [collectionPDA] = await getCollectionPDA(candyMachineAddress);
   const collectionPDAAccount =
@@ -648,7 +567,6 @@ export const mintOneToken = async (
       console.error(error);
     }
   }
-
   const instructionsMatrix = [instructions];
   const signersMatrix = [signers];
 

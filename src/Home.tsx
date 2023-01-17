@@ -10,7 +10,7 @@ import {
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { GatewayProvider } from "@civic/solana-gateway-react";
 import Countdown from "react-countdown";
@@ -28,6 +28,7 @@ import {
   mintOneToken,
   SetupState,
 } from "./candy-machine";
+import { Metaplex } from "@metaplex-foundation/js";
 
 const cluster = process.env.REACT_APP_SOLANA_NETWORK!.toString();
 const decimals = process.env.REACT_APP_SPL_TOKEN_TO_MINT_DECIMALS
@@ -136,8 +137,8 @@ const MintButtonContainer = styled.div`
 `;
 
 const SolExplorerLink = styled.a`
-  color: var(--title-text-color);
-  border-bottom: 1px solid var(--title-text-color);
+  color: #fff;
+  border-bottom: 1px solid #fff;
   font-weight: bold;
   list-style-image: none;
   list-style-position: outside;
@@ -147,7 +148,7 @@ const SolExplorerLink = styled.a`
   text-size-adjust: 100%;
 
   :hover {
-    border-bottom: 2px solid var(--title-text-color);
+    border-bottom: 2px solid #fff;
   }
 `;
 
@@ -223,6 +224,9 @@ export interface HomeProps {
 }
 
 const Home = (props: HomeProps) => {
+  const { connection } = useConnection();
+  const mx = Metaplex.make(connection);
+
   const [balance, setBalance] = useState<number>();
   const [isMinting, setIsMinting] = useState(false); // true when user got to press MINT
   const [isActive, setIsActive] = useState(false); // true when countdown completes or whitelisted
@@ -242,6 +246,7 @@ const Home = (props: HomeProps) => {
   const [endDate, setEndDate] = useState<Date>();
   const [isPresale, setIsPresale] = useState(false);
   const [isWLOnly, setIsWLOnly] = useState(false);
+  const [nftImage, setNftImage] = useState<string | null>(null);
 
   const [alertState, setAlertState] = useState<AlertState>({
     open: false,
@@ -501,11 +506,19 @@ const Home = (props: HomeProps) => {
     );
   };
 
+  async function getNftMetadata(mint: PublicKey) {
+    const result = await mx.nfts().findByMint({ mintAddress: mint }).run();
+
+    if (!result) return;
+
+    setNftImage(result.json!.image ?? null);
+  }
+
   function displaySuccess(mintPublicKey: any, qty: number = 1): void {
     let remaining = itemsRemaining - qty;
     setItemsRemaining(remaining);
     setIsSoldOut(remaining === 0);
-    if (isBurnToken && whitelistTokenBalance && whitelistTokenBalance > 0) {
+    if (whitelistTokenBalance && whitelistTokenBalance > 0) {
       let balance = whitelistTokenBalance - qty;
       setWhitelistTokenBalance(balance);
       setIsActive(isPresale && !isEnded && balance > 0);
@@ -524,6 +537,7 @@ const Home = (props: HomeProps) => {
         ? "https://solscan.io/token/" + mintPublicKey + "?cluster=" + cluster
         : "https://solscan.io/token/" + mintPublicKey
     );
+    getNftMetadata(mintPublicKey);
     setIsMinting(false);
     throwConfetti();
   }
@@ -540,6 +554,7 @@ const Home = (props: HomeProps) => {
     beforeTransactions: Transaction[] = [],
     afterTransactions: Transaction[] = []
   ) => {
+    setNftImage(null);
     try {
       if (wallet.connected && candyMachine?.program && wallet.publicKey) {
         setIsMinting(true);
@@ -708,17 +723,19 @@ const Home = (props: HomeProps) => {
         <MintContainer>
           <DesContainer>
             <NFT elevation={3}>
-              {/* <h2>My NFT</h2> */}
               <br />
-              <div>
-                <Image src="cool-cats.gif" alt="NFT To Mint" />
-              </div>
+              {nftImage && (
+                <div>
+                  {" "}
+                  <Image src={nftImage} alt="NFT" />
+                </div>
+              )}
               <br />
               {wallet &&
                 isActive &&
                 whitelistEnabled &&
                 whitelistTokenBalance > 0 &&
-                isBurnToken && (
+                !isBurnToken && (
                   <h3>
                     You own {whitelistTokenBalance} WL mint{" "}
                     {whitelistTokenBalance > 1 ? "tokens" : "token"}.
